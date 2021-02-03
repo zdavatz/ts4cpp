@@ -4,12 +4,17 @@ Parse Public Domain Websites for Medical Information using Typescript and Puppet
 ## Installing dependencies
 
 ```
-npm install
+make install
 ```
 
 ## Building
 
 ```
-npm run build
+make build
 ```
 
+## Running
+
+```
+node dist/index.js --drugshortage
+```
