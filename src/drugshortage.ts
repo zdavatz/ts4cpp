@@ -49,7 +49,7 @@ export async function scrape(): Promise<Drugshortage[]> {
   const browser = await puppeteer.launch({
     headless: true,
     args: [
-      // '--no-sandbox', 
+      '--no-sandbox', 
       // '--disable-setuid-sandbox', 
       '--disable-gpu', 
       '--disable-dev-shm-usage', 
