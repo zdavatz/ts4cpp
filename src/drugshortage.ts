@@ -1,7 +1,6 @@
-import * as Path from 'path';
 import * as fs from 'fs';
-import puppeteer from 'puppeteer';
 import cheerio from 'cheerio';
+import fetch from 'node-fetch';
 
 // Cheerio doesn't seems to export type so we have to hack around it
 type Cheerio = ReturnType<typeof cheerio.load>;
@@ -36,9 +35,9 @@ type Colour = {
 
 const rootURL = 'https://drugshortage.ch/';
 
-export async function main(options: { outputPath?: string }) {
+export async function main(options: { outputPath: string }) {
   console.log('Running Drugshortage');
-  const outputPath = options.outputPath ?? Path.join('output', 'drugshortage.json');
+  const outputPath = options.outputPath;
   const drugshortage = await scrape();
   console.log(`Writing to file: ${outputPath}`);
   await fs.promises.writeFile(outputPath, JSON.stringify(drugshortage));
@@ -46,26 +45,10 @@ export async function main(options: { outputPath?: string }) {
 }
 
 export async function scrape(): Promise<Drugshortage[]> {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: [
-      '--no-sandbox', 
-      // '--disable-setuid-sandbox', 
-      '--disable-gpu', 
-      '--disable-dev-shm-usage', 
-      '--no-first-run', 
-      '--no-zygote', 
-      '--single-process'
-    ]
-  });
-  const page = await browser.newPage();
   console.log('Fetching Drugshortage');
-  await page.goto(`${rootURL}UebersichtaktuelleLieferengpaesse2.aspx`, {
-    waitUntil: 'load'
-  });
+  const response = await fetch(`${rootURL}UebersichtaktuelleLieferengpaesse2.aspx`);
   console.log('Fetched Drugshortage');
-  const content = await page.content();
-  const $ = cheerio.load(content);
+  const $ = cheerio.load(await response.text());
 
   const companies = extractCompanyTable($);
   const companyByName: {[key: string]: Company} = companies.reduce((acc, company)=> ({...acc, [company.Firma]: company}), {});
@@ -108,8 +91,6 @@ export async function scrape(): Promise<Drugshortage[]> {
       };
     }
   );
-
-  await browser.close();
   return drugshortages;
 }
 
