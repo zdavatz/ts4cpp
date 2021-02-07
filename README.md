@@ -20,4 +20,5 @@ make build
 
 ```
 node dist/index.js --drugshortage
+node dist/index.js --chargenrueckrufe
 ```
