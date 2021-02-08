@@ -20,5 +20,5 @@ make build
 
 ```
 node dist/index.js --drugshortage
-node dist/index.js --chargenrueckrufe
+node dist/index.js --chargenrueckrufe (also for DHCP/HPC)
 ```
