@@ -17,7 +17,10 @@ const options = program.opts();
   }
   if (options.chargenrueckrufe) {
     await swissmedic.main({
-      chargenrueckrufeDe: { outputPath: Path.join('output', 'chargenrueckrufe_de.json') }
+      chargenrueckrufeDe: { outputPath: Path.join('output', 'chargenrueckrufe_de.json') },
+      chargenrueckrufeFr: { outputPath: Path.join('output', 'chargenrueckrufe_fr.json') },
+      DHPC_HPC_De: { outputPath: Path.join('output', 'dhpc_hpc_de.json') },
+      DHPC_HPC_Fr: { outputPath: Path.join('output', 'dhpc_hpc_fr.json') },
     });
   }
 })();
