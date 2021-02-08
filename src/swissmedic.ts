@@ -181,7 +181,7 @@ async function scrapeDetails(urls: string[]): Promise<{[key:string]: SwissmedicD
       dateDoc: $('.mod-headline h5').text(),
       desc: trimLines($('.mod-text article').text()),
       pdf: $('#content .mod-download a').attr('href') ?? null,
-      prep: $('.table-simple tr').toArray().slice(1).map(element => ({
+      prep: $('.table-simple tr').toArray().map(element => ({
         prop: $(element).find(':nth-child(1)').text().trim(),
         field: $(element).find(':nth-child(2)').text().trim(),
       }))
