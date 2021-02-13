@@ -176,11 +176,13 @@ async function scrapeDetails(urls: string[]): Promise<{[key:string]: SwissmedicD
     console.log('Fetching', url);
     const response = await fetch(url);
     const $ = cheerio.load(await response.text());
+    const pdfURL = $('#content .mod-download a').attr('href');
+    const absolutePdfURL = pdfURL !== undefined ? new URL(pdfURL, url).toString() : null;
     const result = {
       title: $('.mod h1').text(),
       dateDoc: $('.mod-headline h5').text(),
       desc: trimLines($('.mod-text article').text()),
-      pdf: $('#content .mod-download a').attr('href') ?? null,
+      pdf: absolutePdfURL ?? null,
       prep: $('.table-simple tr').toArray().map(element => ({
         prop: $(element).find(':nth-child(1)').text().trim(),
         field: $(element).find(':nth-child(2)').text().trim(),
