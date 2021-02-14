@@ -3,6 +3,7 @@ import puppeteer from 'puppeteer';
 import cheerio from 'cheerio';
 import fetch from 'node-fetch';
 import { enrichSwissmedicRecords } from './packagesXlsx';
+import { mapRegNumbersWithTitle } from './swissmedic/custom-mapping';
 
 export type SwissmedicListRecord = {
   url: string | null;
@@ -30,6 +31,7 @@ export async function main(options: {
   DHPC_HPC_De: {outputPath: string},
   DHPC_HPC_Fr: {outputPath: string},
   packagesXlsxPath?: string,
+  customTitleMapPath?: string,
 }) {
   {
     console.log('Fetching Chargenrueckrufe De');
@@ -37,7 +39,7 @@ export async function main(options: {
     await scrapeFilteredIndexAndDetail(
       'https://www.swissmedic.ch/swissmedic/de/home/humanarzneimittel/marktueberwachung/qualitaetsmaengel-und-chargenrueckrufe/chargenrueckrufe.html', 
       outputPath,
-      options.packagesXlsxPath,
+      options
     );
     console.log(`Done`);
   }
@@ -47,7 +49,7 @@ export async function main(options: {
     await scrapeFilteredIndexAndDetail(
       'https://www.swissmedic.ch/swissmedic/fr/home/humanarzneimittel/marktueberwachung/qualitaetsmaengel-und-chargenrueckrufe/chargenrueckrufe.html', 
       outputPath,
-      options.packagesXlsxPath,
+      options
     );
     console.log(`Done`);
   }
@@ -57,7 +59,7 @@ export async function main(options: {
     await scrapeFilteredIndexAndDetail(
       'https://www.swissmedic.ch/swissmedic/de/home/humanarzneimittel/marktueberwachung/health-professional-communication--hpc-.html', 
       outputPath,
-      options.packagesXlsxPath,
+      options
     );
     console.log(`Done`);
   }
@@ -67,13 +69,20 @@ export async function main(options: {
     await scrapeFilteredIndexAndDetail(
       'https://www.swissmedic.ch/swissmedic/fr/home/humanarzneimittel/marktueberwachung/health-professional-communication--hpc-.html', 
       outputPath,
-      options.packagesXlsxPath,
+      options
     );
     console.log(`Done`);
   }
 }
 
-async function scrapeFilteredIndexAndDetail(url: string, outputPath: string, packagesXlsxPath?: string) {
+async function scrapeFilteredIndexAndDetail(
+  url: string,
+  outputPath: string,
+  { packagesXlsxPath, customTitleMapPath }: {
+    packagesXlsxPath?: string,
+    customTitleMapPath?: string,
+  },
+) {
   const chargenrueckrufeDe = await scrape(url);
   const filtered = chargenrueckrufeDe.filter(filterNews);
   console.log(`Received ${filtered.length} items`);
@@ -87,6 +96,11 @@ async function scrapeFilteredIndexAndDetail(url: string, outputPath: string, pac
     await enrichSwissmedicRecords(packagesXlsxPath, merged);
   } else {
     console.warn('packagesXlsxPath not provided');
+  }
+  if (customTitleMapPath !== undefined) {
+    await mapRegNumbersWithTitle(customTitleMapPath, merged);
+  } else {
+    console.warn('customTitleMapPath not provided');
   }
   console.log(`Writing to file: ${outputPath}`);
   await fs.promises.writeFile(outputPath, JSON.stringify(merged));
@@ -212,4 +226,25 @@ function extractTextFromPage(page: puppeteer.Page , selector: string): Promise<s
 
 function trimLines(lines: string): string {
   return lines.split('\n').map(s => s.trim()).filter(s => s.length > 0).join('\n');
+}
+
+export function appendRegNumber(record: SwissmedicRecord, regNumber: number) {
+  const regNumberStr = String(regNumber);
+  var hasRegNumberAlready = false;
+  for (const prep of record.prep) {
+    if (prep.prop === 'Zulassungsnummer') {
+      hasRegNumberAlready = true;
+      const currentValue = prep.field;
+      if (!currentValue.includes(regNumberStr)) {
+        prep.field += ',' + regNumber;
+      }
+      break;
+    }
+  }
+  if (!hasRegNumberAlready) {
+    record.prep.push({
+      'prop': 'Zulassungsnummer',
+      'field': regNumberStr,
+    },)
+  }
 }

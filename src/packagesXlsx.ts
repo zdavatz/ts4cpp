@@ -1,5 +1,5 @@
 import Excel from 'exceljs';
-import { SwissmedicRecord } from './swissmedic';
+import { SwissmedicRecord, appendRegNumber } from './swissmedic';
 
 export async function enrichSwissmedicRecords(path:string, records: SwissmedicRecord[]) {
   console.log(`Patching records with ${path}`);
@@ -108,25 +108,4 @@ function patchRecords(
     }
   }
   return false;
-}
-
-function appendRegNumber(record: SwissmedicRecord, regNumber: number) {
-  const regNumberStr = String(regNumber);
-  var hasRegNumberAlready = false;
-  for (const prep of record.prep) {
-    if (prep.prop === 'Zulassungsnummer') {
-      hasRegNumberAlready = true;
-      const currentValue = prep.field;
-      if (!currentValue.includes(regNumberStr)) {
-        prep.field += ',' + regNumber;
-      }
-      break;
-    }
-  }
-  if (!hasRegNumberAlready) {
-    record.prep.push({
-      'prop': 'Zulassungsnummer',
-      'field': regNumberStr,
-    },)
-  }
 }

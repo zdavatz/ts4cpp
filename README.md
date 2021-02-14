@@ -26,3 +26,11 @@ node dist/index.js --chargenrueckrufe (also for DHCP/HPC)
 ### Optional
 
 - You can put `zugelassene_packungen_ham.xlsx` in `input/`.
+- You can also add Zulassungsnummer via `input/title-to-reg-number.json`. z.B.
+
+    ```
+      {
+        "TITLE HERE": 12345,
+        "ANOTHER TITLE HERE": 23456
+      }
+    ```
