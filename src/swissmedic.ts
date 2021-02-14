@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import puppeteer from 'puppeteer';
 import cheerio from 'cheerio';
 import fetch from 'node-fetch';
+import { enrichSwissmedicRecords } from './packagesXlsx';
 
 export type SwissmedicListRecord = {
   url: string | null;
@@ -21,18 +22,22 @@ export type SwissmedicDetail = {
   }>;
 }
 
+export type SwissmedicRecord = SwissmedicListRecord & SwissmedicDetail;
+
 export async function main(options: { 
   chargenrueckrufeDe: {outputPath: string}, 
   chargenrueckrufeFr: {outputPath: string},
   DHPC_HPC_De: {outputPath: string},
   DHPC_HPC_Fr: {outputPath: string},
+  packagesXlsxPath?: string,
 }) {
   {
     console.log('Fetching Chargenrueckrufe De');
     const outputPath = options.chargenrueckrufeDe.outputPath;
     await scrapeFilteredIndexAndDetail(
       'https://www.swissmedic.ch/swissmedic/de/home/humanarzneimittel/marktueberwachung/qualitaetsmaengel-und-chargenrueckrufe/chargenrueckrufe.html', 
-      outputPath
+      outputPath,
+      options.packagesXlsxPath,
     );
     console.log(`Done`);
   }
@@ -41,7 +46,8 @@ export async function main(options: {
     const outputPath = options.chargenrueckrufeFr.outputPath;
     await scrapeFilteredIndexAndDetail(
       'https://www.swissmedic.ch/swissmedic/fr/home/humanarzneimittel/marktueberwachung/qualitaetsmaengel-und-chargenrueckrufe/chargenrueckrufe.html', 
-      outputPath
+      outputPath,
+      options.packagesXlsxPath,
     );
     console.log(`Done`);
   }
@@ -50,7 +56,8 @@ export async function main(options: {
     const outputPath = options.DHPC_HPC_De.outputPath;
     await scrapeFilteredIndexAndDetail(
       'https://www.swissmedic.ch/swissmedic/de/home/humanarzneimittel/marktueberwachung/health-professional-communication--hpc-.html', 
-      outputPath
+      outputPath,
+      options.packagesXlsxPath,
     );
     console.log(`Done`);
   }
@@ -59,22 +66,28 @@ export async function main(options: {
     const outputPath = options.DHPC_HPC_Fr.outputPath;
     await scrapeFilteredIndexAndDetail(
       'https://www.swissmedic.ch/swissmedic/fr/home/humanarzneimittel/marktueberwachung/health-professional-communication--hpc-.html', 
-      outputPath
+      outputPath,
+      options.packagesXlsxPath,
     );
     console.log(`Done`);
   }
 }
 
-async function scrapeFilteredIndexAndDetail(url: string, outputPath: string) {
+async function scrapeFilteredIndexAndDetail(url: string, outputPath: string, packagesXlsxPath?: string) {
   const chargenrueckrufeDe = await scrape(url);
   const filtered = chargenrueckrufeDe.filter(filterNews);
   console.log(`Received ${filtered.length} items`);
   const urls = filtered.map(i => i.url).filter((u): u is string => u !== null);
   const details = await scrapeDetails(urls);
-  const merged = filtered.map(item => ({
+  const merged: SwissmedicRecord[] = filtered.map(item => ({
     ...item,
     ...(details[item.url ?? ''] ?? {})
   }));
+  if (packagesXlsxPath !== undefined) {
+    await enrichSwissmedicRecords(packagesXlsxPath, merged);
+  } else {
+    console.warn('packagesXlsxPath not provided');
+  }
   console.log(`Writing to file: ${outputPath}`);
   await fs.promises.writeFile(outputPath, JSON.stringify(merged));
 }

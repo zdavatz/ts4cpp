@@ -22,3 +22,7 @@ make build
 node dist/index.js --drugshortage
 node dist/index.js --chargenrueckrufe (also for DHCP/HPC)
 ```
+
+### Optional
+
+- You can put `zugelassene_packungen_ham.xlsx` in `input/`.

@@ -21,6 +21,7 @@ const options = program.opts();
       chargenrueckrufeFr: { outputPath: Path.join('output', 'chargenrueckrufe_fr.json') },
       DHPC_HPC_De: { outputPath: Path.join('output', 'dhpc_hpc_de.json') },
       DHPC_HPC_Fr: { outputPath: Path.join('output', 'dhpc_hpc_fr.json') },
+      packagesXlsxPath: Path.join('input', 'zugelassene_packungen_ham.xlsx'),
     });
   }
 })();

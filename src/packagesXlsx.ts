@@ -2,6 +2,7 @@ import Excel from 'exceljs';
 import { SwissmedicRecord } from './swissmedic';
 
 export async function enrichSwissmedicRecords(path:string, records: SwissmedicRecord[]) {
+  console.log(`Patching records with ${path}`);
   const index = buildIndexForSwissmedicRecords(records);
   try {
     await loopXlsx(path, index, records);
