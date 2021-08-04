@@ -66,14 +66,14 @@ export async function scrape(): Promise<Drugshortage[]> {
       const data = {
         id: index,
         bezeichnung: $(element).find('td:nth-child(1)').text(),
-        detailsLink: rootURL + $(element).find('td:nth-child(1) > a').attr('href'),
-        gtin: parseInt($(element).find('td:nth-child(2)').text()),
-        pharmacode: parseInt($(element).find('td:nth-child(3)').text()),
-        firma: $(element).find('td:nth-child(4)').text(),
+        detailsLink: rootURL + $(element).find('td:nth-child(1) a').attr('href'),
+        datumLieferfahigkeit: $(element).find('td:nth-child(2)').text(),
+        status: $(element).find('td:nth-child(4)').text(),
         datumLetzteMutation: $(element).find('td:nth-child(5)').text(),
-        tageSeitErsterMeldung: parseInt($(element).find('td:nth-child(6)').text()),
-        status: $(element).find('td:nth-child(7)').text(),
-        datumLieferfahigkeit: $(element).find('td:nth-child(8)').text(),
+        firma: $(element).find('td:nth-child(6)').text(),
+        gtin: parseInt($(element).find('td:nth-child(7)').text()),
+        pharmacode: parseInt($(element).find('td:nth-child(8)').text()),
+        tageSeitErsterMeldung: parseInt($(element).find('td:nth-child(9)').text()),
       };
 
       if (!(data.firma in companyByName)) {
