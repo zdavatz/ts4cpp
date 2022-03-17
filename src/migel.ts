@@ -1,15 +1,17 @@
 import { download, getMigelXLSXRows, groupByPositionNumber } from './migel/xlsx';
 import { lookupArtikels } from './migel/lookup';
+import Path from 'path';
 import * as fs from 'fs';
 
 export async function main() {
-  const downloadedPath = await download();
+  const config = await getConfig();
+  const downloadedPath = await download(config);
   const rows = await getMigelXLSXRows(downloadedPath);
   const results = groupByPositionNumber(rows);
   console.log(`Found ${Object.keys(results).length} position numbers`);
 
   let wroteHeader = false;
-  const outputFilename = './output/test-out.csv';
+  const outputFilename = getOutputFilename();
   const writeStream = fs.createWriteStream(outputFilename, {
     flags: 'w',
     encoding: 'utf-8',
@@ -20,7 +22,7 @@ export async function main() {
   for (const positionNumber in results) {
     const xlsEntry = results[positionNumber];
 
-    const lookedUp = await lookupArtikels(positionNumber);
+    const lookedUp = await lookupArtikels(config, positionNumber);
     if (lookedUp === null) {
       console.error('Cannot look up for: ', positionNumber);
       continue;
@@ -54,4 +56,21 @@ export async function main() {
 
 function pipeToCSVStream(strs: string[], stream: fs.WriteStream) {
   stream.write(strs.join(';')+'\n');
+}
+
+export type Config = {
+  'xlsx-url': string;
+  'lookup-url': string;
+}
+
+async function getConfig(): Promise<Config> {
+  const path = Path.join('input', 'migel.json');
+  console.log(`Getting config from: ${path}`);
+  const configString = await fs.promises.readFile(path, { encoding: 'utf-8' });
+  return JSON.parse(configString);
+}
+
+function getOutputFilename(): string {
+  const d = new Date();
+  return Path.join('output', `Migel_${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}.csv`);
 }

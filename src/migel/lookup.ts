@@ -1,13 +1,14 @@
 import fetch from 'node-fetch';
 import cheerio from 'cheerio';
+import { Config } from '../migel';
 
 export type LookupResult = {
   headers: string[];
   rows: string[][];
 }
 
-export async function lookupArtikels(positionNumber: string): Promise<LookupResult | null> {
-  const url = `https://apps.hcisolutions.ch/wsv/wv_getmigel.aspx?Lang=DE&Query=migelcode=${positionNumber.replace(/\./g, '')}`
+export async function lookupArtikels(config: Config, positionNumber: string): Promise<LookupResult | null> {
+  const url = config['lookup-url'].replace('{{positionNumber}}', positionNumber.replace(/\./g, ''));
   console.log('Fetching', url);
   const response = await fetch(url);
   console.log('Fetched');

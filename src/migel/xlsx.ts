@@ -3,9 +3,10 @@ import Path from 'path';
 import https from 'https';
 import { IncomingHttpHeaders } from 'http';
 import Excel from 'exceljs';
+import { Config } from '../migel';
 
-export async function download(): Promise<string> {
-  const xlsxURLString = 'https://www.bag.admin.ch/dam/bag/de/dokumente/kuv-leistungen/Mittel-%20und%20Gegenst%C3%A4ndeliste/migel01012022excelprov.xlsx.download.xlsx/Mittel-%20und%20Gegenst%C3%A4ndeliste%20vom%2001.01.2022%20in%20Excel%20Format.pdf.xlsx';
+export async function download(config: Config): Promise<string> {
+  const xlsxURLString = config['xlsx-url'];
   const xlsxURL = new URL(xlsxURLString);
 
   const options = {
