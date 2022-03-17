@@ -1,0 +1,4 @@
+{
+    "xlsx-url": "https://www.bag.admin.ch/dam/bag/de/dokumente/kuv-leistungen/Mittel-%20und%20Gegenst%C3%A4ndeliste/migel01012022excelprov.xlsx.download.xlsx/Mittel-%20und%20Gegenst%C3%A4ndeliste%20vom%2001.01.2022%20in%20Excel%20Format.pdf.xlsx",
+    "lookup-url": "https://apps.hcisolutions.ch/wsv/wv_getmigel.aspx?Lang=DE&Query=migelcode={{positionNumber}}"
+}
