@@ -16,7 +16,7 @@ export async function lookupArtikels(config: Config, positionNumber: string): Pr
 
   const tdsOfTheGoodTable = $('table td:first-child').toArray().filter(e => $(e).text() === 'Pharmacode');
   if (tdsOfTheGoodTable.length > 1) {
-    console.warn('More than one good table', positionNumber);
+    // console.warn('More than one good table', positionNumber);
   } else if (tdsOfTheGoodTable.length === 0) {
     console.warn('No table found');
     return null;
