@@ -78,10 +78,14 @@ export async function getMigelXLSXRows(xlsxPath: string): Promise<MigelXLSXRow[]
     const positionNumber: string = positionNumberCell.value.trim();
 
     const HVBSelbstanwendungCell = row.getCell('M');
-    const HVBSelbstanwendung: string = typeof HVBSelbstanwendungCell.value === 'string' ? HVBSelbstanwendungCell.value : '';
+    const HVBSelbstanwendung: string =
+      typeof HVBSelbstanwendungCell.value === 'string' ? HVBSelbstanwendungCell.value : 
+      typeof HVBSelbstanwendungCell.value === 'number' ? String(HVBSelbstanwendungCell.value) : '';
 
     const HVBPflegeCell = row.getCell('N');
-    const HVBPflege: string = typeof HVBPflegeCell.value === 'string' ? HVBPflegeCell.value : '';
+    const HVBPflege: string =
+      typeof HVBPflegeCell.value === 'string' ? HVBPflegeCell.value :
+      typeof HVBPflegeCell.value === 'number' ? String(HVBPflegeCell.value) : '';
 
     results.push({
         positionNumber,
