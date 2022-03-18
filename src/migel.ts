@@ -61,7 +61,7 @@ export async function main() {
 }
 
 function pipeToCSVStream(strs: string[], stream: fs.WriteStream) {
-  stream.write(strs.join(';')+'\n');
+  stream.write(strs.map(s=> '"' + s.replace(/-\n/g, '').replace(/"/g, '') + '"').join(';')+'\n');
 }
 
 export type Config = {
