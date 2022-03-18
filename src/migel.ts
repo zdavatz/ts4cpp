@@ -31,8 +31,11 @@ export async function main() {
     if (!wroteHeader) {
       const fullHeaders = [
         'Positions-Nr.',
+        'L',
+        'Menge / Einheit',
         'HVB Selbstanwendung',
         'HVB Pflege',
+        'Rev.',
       ].concat(lookedUp.headers);
       pipeToCSVStream(fullHeaders, writeStream);
       wroteHeader = true;
@@ -40,8 +43,11 @@ export async function main() {
     for (const row of lookedUp.rows) {
       pipeToCSVStream([
         positionNumber,
-        xlsEntry['HVB Selbstanwendung'], 
-        xlsEntry['HVB Pflege']
+        xlsEntry['L'],
+        xlsEntry['Menge / Einheit'],
+        xlsEntry['HVB Selbstanwendung'],
+        xlsEntry['HVB Pflege'],
+        xlsEntry['Rev.'],
       ].concat(row), writeStream);
     }
   }
@@ -51,7 +57,7 @@ export async function main() {
       resolve(null);
     })
   });
-  console.log('file closed');
+  console.log(`written to ${outputFilename}`);
 }
 
 function pipeToCSVStream(strs: string[], stream: fs.WriteStream) {

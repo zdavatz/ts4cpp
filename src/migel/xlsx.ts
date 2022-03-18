@@ -61,8 +61,11 @@ export async function download(config: Config): Promise<string> {
 
 export type MigelXLSXRow = {
   positionNumber: string,
+  'L': string,
+  'Menge / Einheit': string,
   'HVB Selbstanwendung': string,
   'HVB Pflege': string,
+  'Rev.': string,
 }
 
 export async function getMigelXLSXRows(xlsxPath: string): Promise<MigelXLSXRow[]> {
@@ -77,20 +80,32 @@ export async function getMigelXLSXRows(xlsxPath: string): Promise<MigelXLSXRow[]
     if (typeof positionNumberCell.value !== 'string') return;
     const positionNumber: string = positionNumberCell.value.trim();
 
-    const HVBSelbstanwendungCell = row.getCell('M');
-    const HVBSelbstanwendung: string =
-      typeof HVBSelbstanwendungCell.value === 'string' ? HVBSelbstanwendungCell.value : 
-      typeof HVBSelbstanwendungCell.value === 'number' ? String(HVBSelbstanwendungCell.value) : '';
+    function stringAtColumn(col: string): string {
+      const cell = row.getCell(col);
+      const str: string =
+        typeof cell.value === 'string' ? cell.value : 
+        typeof cell.value === 'number' ? String(cell.value) : '';
+      return str;
+    }
 
-    const HVBPflegeCell = row.getCell('N');
-    const HVBPflege: string =
-      typeof HVBPflegeCell.value === 'string' ? HVBPflegeCell.value :
-      typeof HVBPflegeCell.value === 'number' ? String(HVBPflegeCell.value) : '';
+    // L
+    const columnI = stringAtColumn('I');
+    // Menge / Einheit
+    const columnL = stringAtColumn('L');
+    // HVB Selbstanwendung
+    const columnM = stringAtColumn('M');
+    // HVB Pflege
+    const columnN = stringAtColumn('N');
+    // Rev.
+    const columnP = stringAtColumn('P');
 
     results.push({
         positionNumber,
-        'HVB Selbstanwendung': HVBSelbstanwendung,
-        'HVB Pflege': HVBPflege,
+        'L': columnI,
+        'Menge / Einheit': columnL,
+        'HVB Selbstanwendung': columnM,
+        'HVB Pflege': columnN,
+        'Rev.': columnP,
     });
   });
 
