@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import puppeteer from 'puppeteer';
+import puppeteer, { Page } from 'puppeteer';
 import cheerio from 'cheerio';
 import fetch from 'node-fetch';
 import { enrichSwissmedicRecords } from './packagesXlsx';
@@ -220,7 +220,7 @@ async function scrapeDetails(urls: string[]): Promise<{[key:string]: SwissmedicD
   return results;
 }
 
-function extractTextFromPage(page: puppeteer.Page , selector: string): Promise<string> {
+function extractTextFromPage(page: Page , selector: string): Promise<string> {
   return page.$eval(selector, a => (a as HTMLElement).innerText);
 }
 
