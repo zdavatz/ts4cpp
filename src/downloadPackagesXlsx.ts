@@ -10,7 +10,8 @@ export async function download() {
     path: '/dam/swissmedic/de/dokumente/internetlisten/zugelassene_packungen_human.xlsx.download.xlsx/zugelassene_packungen_ham.xlsx',
   };
   let headers = await new Promise<IncomingHttpHeaders>((resolve, reject)=> {
-    const req = https.request({ ...options, method: 'HEAD' }, (res)=> {
+    const agent = new https.Agent({ keepAlive: false });
+    const req = https.request({ ...options, agent, method: 'HEAD' }, (res)=> {
       resolve(res.headers);
     });
     req.on('error', reject);
