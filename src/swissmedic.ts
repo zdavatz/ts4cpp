@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import puppeteer from 'puppeteer';
+import puppeteer, { Page } from 'puppeteer';
 import cheerio from 'cheerio';
 import fetch from 'node-fetch';
 import { enrichSwissmedicRecords } from './packagesXlsx';
@@ -25,8 +25,8 @@ export type SwissmedicDetail = {
 
 export type SwissmedicRecord = SwissmedicListRecord & SwissmedicDetail;
 
-export async function main(options: { 
-  chargenrueckrufeDe: {outputPath: string}, 
+export async function main(options: {
+  chargenrueckrufeDe: {outputPath: string},
   chargenrueckrufeFr: {outputPath: string},
   DHPC_HPC_De: {outputPath: string},
   DHPC_HPC_Fr: {outputPath: string},
@@ -37,7 +37,7 @@ export async function main(options: {
     console.log('Fetching Chargenrueckrufe De');
     const outputPath = options.chargenrueckrufeDe.outputPath;
     await scrapeFilteredIndexAndDetail(
-      'https://www.swissmedic.ch/swissmedic/de/home/humanarzneimittel/marktueberwachung/qualitaetsmaengel-und-chargenrueckrufe/chargenrueckrufe.html', 
+      'https://www.swissmedic.ch/swissmedic/de/home/humanarzneimittel/marktueberwachung/qualitaetsmaengel-und-chargenrueckrufe/chargenrueckrufe.html',
       outputPath,
       options
     );
@@ -47,7 +47,7 @@ export async function main(options: {
     console.log('Fetching Chargenrueckrufe Fr');
     const outputPath = options.chargenrueckrufeFr.outputPath;
     await scrapeFilteredIndexAndDetail(
-      'https://www.swissmedic.ch/swissmedic/fr/home/humanarzneimittel/marktueberwachung/qualitaetsmaengel-und-chargenrueckrufe/chargenrueckrufe.html', 
+      'https://www.swissmedic.ch/swissmedic/fr/home/humanarzneimittel/marktueberwachung/qualitaetsmaengel-und-chargenrueckrufe/chargenrueckrufe.html',
       outputPath,
       options
     );
@@ -57,7 +57,7 @@ export async function main(options: {
     console.log('Fetching dhpc_hpc_de');
     const outputPath = options.DHPC_HPC_De.outputPath;
     await scrapeFilteredIndexAndDetail(
-      'https://www.swissmedic.ch/swissmedic/de/home/humanarzneimittel/marktueberwachung/health-professional-communication--hpc-.html', 
+      'https://www.swissmedic.ch/swissmedic/de/home/humanarzneimittel/marktueberwachung/health-professional-communication--hpc-.html',
       outputPath,
       options
     );
@@ -67,7 +67,7 @@ export async function main(options: {
     console.log('Fetching dhpc_hpc_fr');
     const outputPath = options.DHPC_HPC_Fr.outputPath;
     await scrapeFilteredIndexAndDetail(
-      'https://www.swissmedic.ch/swissmedic/fr/home/humanarzneimittel/marktueberwachung/health-professional-communication--hpc-.html', 
+      'https://www.swissmedic.ch/swissmedic/fr/home/humanarzneimittel/marktueberwachung/health-professional-communication--hpc-.html',
       outputPath,
       options
     );
@@ -111,7 +111,7 @@ async function scrape(url: string): Promise<SwissmedicListRecord[]> {
     headless: true,
     args: [
       '--no-sandbox',
-      '--disable-setuid-sandbox', 
+      '--disable-setuid-sandbox',
       '--disable-gpu',
       '--disable-dev-shm-usage',
       '--no-first-run',
@@ -147,8 +147,8 @@ async function scrape(url: string): Promise<SwissmedicListRecord[]> {
         return {
           url: absoluteURL,
           title: row.querySelector('a')?.innerText ?? null,
-          date: (row.querySelector('.teaserDate') as HTMLElement)?.innerText?.replace(/\./g,'/'),
-          dateOrder: (row.querySelector('.teaserDate') as HTMLElement)?.innerText?.split('.')?.reverse()?.join('/')
+          date: (row.querySelector('.teaserDate') as HTMLElement)?.innerText?.replace(/\./g,'/') ?? '',
+          dateOrder: (row.querySelector('.teaserDate') as HTMLElement)?.innerText?.split('.')?.reverse()?.join('/') ?? ''
         }
       });
     }, url);
@@ -164,7 +164,7 @@ async function scrape(url: string): Promise<SwissmedicListRecord[]> {
     const startedNavigation = Date.now();
     while (true) {
       // Wait for the page to be navigated
-      const selectedPageNumber = await page.$eval('li.active a[href="#"]', 
+      const selectedPageNumber = await page.$eval('li.active a[href="#"]',
         a => (a as HTMLElement).innerText.replace(/\D/g, '')
       );
       if (selectedPageNumber === nextPageNumber) {
@@ -187,7 +187,7 @@ async function scrape(url: string): Promise<SwissmedicListRecord[]> {
 
 function filterNews(news: SwissmedicListRecord): boolean {
   const exclude = [
-    "KPA Breakout Session – Präsentationen", 
+    "KPA Breakout Session – Präsentationen",
     "Newsdienste – Newsletter abonnieren",
     "Services Services d'information – Newsletters, flux RSS"
   ];
@@ -220,7 +220,7 @@ async function scrapeDetails(urls: string[]): Promise<{[key:string]: SwissmedicD
   return results;
 }
 
-function extractTextFromPage(page: puppeteer.Page , selector: string): Promise<string> {
+function extractTextFromPage(page: Page , selector: string): Promise<string> {
   return page.$eval(selector, a => (a as HTMLElement).innerText);
 }
 
