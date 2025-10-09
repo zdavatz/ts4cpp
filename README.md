@@ -2,7 +2,7 @@
 Parse Public Domain Websites for Medical Information using Typescript and Puppeteer
 
 ## Requirements
-* node v14.15.0 or you risk running into [Issue #2](https://github.com/zdavatz/ts4cpp/issues/2)
+* node v22
 
 ## Installing dependencies
 

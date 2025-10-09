@@ -28,5 +28,8 @@
     "exceljs": "^4.2.0",
     "node-fetch": "^2.6.1",
     "puppeteer": "^24.23.0"
+  },
+  "engines": {
+    "node": ">= 22"
   }
 }
