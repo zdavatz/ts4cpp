@@ -74,7 +74,7 @@ export async function main(options: { packagesXlsxPath: string, outputPath: stri
         const cert = await readResource(certId);
         const patent = await readPatent(String(cert.grundpatent.id));
 
-        const regnrs = new Set(cert.zulassungen.map(z => z.nummer.slice(0, 5)));
+        const regnrs = new Set(cert.zulassungen.map(z => z.nummer));
         certificates[certId] = {
           certificateNumber: cert.schutztitelnummer ?? '',
           issueDate: cert.erteilungsdatum ?? '',
