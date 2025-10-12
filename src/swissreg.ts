@@ -50,6 +50,7 @@ type Certificate = {
   protectionDate: string;
   basePatentDate: string;
   basePatent: string;
+  basePatentId: string;
   iksnrs: string[];
   expiryDate: string;
   deletionDate: string;
@@ -73,7 +74,7 @@ export async function main(options: { packagesXlsxPath: string, outputPath: stri
         const cert = await readResource(certId);
         const patent = await readPatent(String(cert.grundpatent.id));
 
-        const regnrs = new Set(cert.zulassungen.map(z => z.nummer.slice(0, 5)));
+        const regnrs = new Set(cert.zulassungen.map(z => z.nummer));
         certificates[certId] = {
           certificateNumber: cert.schutztitelnummer ?? '',
           issueDate: cert.erteilungsdatum ?? '',
@@ -82,6 +83,7 @@ export async function main(options: { packagesXlsxPath: string, outputPath: stri
           protectionDate: cert.schutzdauerbeginn ?? '', //         => Date.new(1998, 8, 14),
           basePatentDate: patent.anmeldedatum ?? '', //        => Date.new(1978, 8, 14),
           basePatent: cert.grundpatent.nummer ?? patent.schutztitelnummer ?? '', //             => "CH644840",
+          basePatentId: String(cert.grundpatent.id ?? ''),
           iksnrs: [...regnrs],
           expiryDate: cert.maximaleSchutzdauer ?? '',
           deletionDate: cert.loeschdatum ?? '',
