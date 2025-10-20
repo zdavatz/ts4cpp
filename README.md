@@ -22,6 +22,7 @@ make build
 node dist/index.js --drugshortage
 node dist/index.js --chargenrueckrufe (also for DHCP/HPC)
 node dist/index.js --migel
+node dist/index.js --swissreg
 ```
 
 ### Optional
