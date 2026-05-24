@@ -25,6 +25,10 @@ node dist/index.js --migel
 node dist/index.js --swissreg
 ```
 
+### Notes
+
+- `--drugshortage` scrapes `drugshortage.ch`. When the site is down it returns an ASP.NET "Laufzeitfehler" page instead of the data tables; in that case the scraper writes an empty `output/drugshortage.json` rather than crashing.
+
 ### Optional
 
 - You can put `zugelassene_packungen_ham.xlsx` in `input/`.

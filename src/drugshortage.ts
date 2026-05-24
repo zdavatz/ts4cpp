@@ -1,9 +1,9 @@
 import * as fs from 'fs';
-import cheerio from 'cheerio';
+import { load as cheerioLoad } from 'cheerio';
 import fetch from 'node-fetch';
 
 // Cheerio doesn't seems to export type so we have to hack around it
-type Cheerio = ReturnType<typeof cheerio.load>;
+type Cheerio = ReturnType<typeof cheerioLoad>;
 
 type Drugshortage = {
   id: number;
@@ -48,7 +48,7 @@ export async function scrape(): Promise<Drugshortage[]> {
   console.log('Fetching Drugshortage');
   const response = await fetch(`${rootURL}UebersichtaktuelleLieferengpaesse2.aspx`);
   console.log('Fetched Drugshortage');
-  const $ = cheerio.load(await response.text());
+  const $ = cheerioLoad(await response.text());
 
   const companies = extractCompanyTable($);
   const companyByName: {[key: string]: Company} = companies.reduce((acc, company)=> ({...acc, [company.Firma]: company}), {});
