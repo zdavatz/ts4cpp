@@ -25,8 +25,8 @@ type Cheerio = ReturnType<typeof cheerioLoad>;
 
 ## Data sources & quirks
 
-- **drugshortage.ch** — table `#GridView1` has 11 columns: Bezeichnung, Datum Lieferfähigkeit, Alternativen, Status, Datum letzte Mutation, Firma, GTIN, Pharmacode, Tage seit erster Meldung, ATC, GENGRP. `#GridView2` = companies, `#GridView5` = colour legend. The site occasionally returns an ASP.NET "Laufzeitfehler" page when broken — scrape produces `[]` rather than throwing.
-- The sister Ruby importer lives at `/home/zeno/.software/oddb.org/src/plugin/shortage.rb` and is a useful reference when scraping logic needs to change.
+- **drugshortage.ch** — site was re-platformed from ASP.NET to WordPress (mid-2026). All `.aspx` URLs are gone (HTTP 500). Data now comes from JSON endpoints, primarily `https://www.drugshortage.ch/api_engpaesse.php` (shortage list, companies, colour legend in one payload). Other endpoints exist under `/api_*.php` for related views (abgeschlossen, ausserhandel, vertriebseinstellung, suche, etc.) — see issue #19 for the full list.
+- The sister Ruby importer at `/home/zeno/.software/oddb.org/src/plugin/shortage.rb` still parses the old ASP.NET HTML and will need the same kind of rewrite.
 
 ## Conventions
 

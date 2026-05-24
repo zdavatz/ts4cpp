@@ -1,9 +1,5 @@
 import * as fs from 'fs';
-import { load as cheerioLoad } from 'cheerio';
 import fetch from 'node-fetch';
-
-// Cheerio doesn't seems to export type so we have to hack around it
-type Cheerio = ReturnType<typeof cheerioLoad>;
 
 type Drugshortage = {
   id: number;
@@ -12,6 +8,7 @@ type Drugshortage = {
   gtin: number;
   pharmacode: number;
   firma: string;
+  atc: string;
   datumLetzteMutation: string;
   tageSeitErsterMeldung: number;
   status: string;
@@ -31,9 +28,45 @@ type Colour = {
   '#': number;
   'Bewertung': string;
   'Art der Meldung': string;
-}
+};
 
-const rootURL = 'https://drugshortage.ch/';
+// Shape of https://www.drugshortage.ch/api_engpaesse.php
+type ApiResponse = {
+  engpaesse: ApiEngpass[];
+  firmen: ApiFirma[];
+  bewertungLegende: ApiBewertung[];
+};
+
+type ApiEngpass = {
+  id: number;
+  bezeichnung: string;
+  firma: string;
+  status: string;
+  gtin: string;
+  pharmacode: string;
+  atc: string;
+  tage: number;
+  lieferdatum: string;
+  mutation: string;
+  bewertung: number;
+};
+
+type ApiFirma = {
+  firma: string;
+  bewertung: number;
+  anzahlProdukte: number;
+  anzahlEngpaesse: number;
+};
+
+type ApiBewertung = {
+  ident: number;
+  bewertung: string;
+  artMeldung: string;
+};
+
+const BASE_URL = 'https://www.drugshortage.ch';
+const API_URL = `${BASE_URL}/api_engpaesse.php`;
+const DETAIL_URL = `${BASE_URL}/index.php/detail-lieferengpass/?ID=`;
 
 export async function main(options: { outputPath: string }) {
   console.log('Running Drugshortage');
@@ -41,84 +74,55 @@ export async function main(options: { outputPath: string }) {
   const drugshortage = await scrape();
   console.log(`Writing to file: ${outputPath}`);
   await fs.promises.writeFile(outputPath, JSON.stringify(drugshortage));
-  console.log(`Done`);
+  console.log('Done');
 }
 
 export async function scrape(): Promise<Drugshortage[]> {
-  console.log('Fetching Drugshortage');
-  const response = await fetch(`${rootURL}UebersichtaktuelleLieferengpaesse2.aspx`);
-  console.log('Fetched Drugshortage');
-  const $ = cheerioLoad(await response.text());
+  console.log(`Fetching ${API_URL}`);
+  const response = await fetch(API_URL);
+  const data = (await response.json()) as ApiResponse;
+  console.log(`Fetched ${data.engpaesse?.length ?? 0} engpaesse, ${data.firmen?.length ?? 0} firmen, ${data.bewertungLegende?.length ?? 0} legend entries`);
 
-  const companies = extractCompanyTable($);
-  const companyByName: {[key: string]: Company} = companies.reduce((acc, company)=> ({...acc, [company.Firma]: company}), {});
-  console.log(`Found ${companies.length} companies`);
+  const companyByName: { [key: string]: Company } = {};
+  for (const f of data.firmen ?? []) {
+    companyByName[f.firma] = {
+      Bewertung: f.bewertung,
+      Firma: f.firma,
+      'Anzahl registrierte Produkte Total': f.anzahlProdukte,
+      'Anzahl offene Engpässe': f.anzahlEngpaesse,
+    };
+  }
 
-  const colours = extractColourTable($);
-  const colourByNumber: {[key: number]: Colour} = colours.reduce((acc, colour)=> ({...acc, [colour['#']]: colour}), {});
-  console.log(`Found ${colours.length} colours`);
+  const colourByNumber: { [key: number]: Colour } = {};
+  for (const l of data.bewertungLegende ?? []) {
+    colourByNumber[l.ident] = {
+      '#': l.ident,
+      Bewertung: l.bewertung,
+      'Art der Meldung': l.artMeldung,
+    };
+  }
 
-  console.log('Generating drugshortages');
-  const drugshortages = $('#GridView1 > tbody > tr')
-    .toArray()
-    .slice(1) // drop table head
-    .map((element, index): Drugshortage => {
-      const data = {
-        id: index,
-        bezeichnung: $(element).find('td:nth-child(1)').text(),
-        detailsLink: rootURL + $(element).find('td:nth-child(1) a').attr('href'),
-        datumLieferfahigkeit: $(element).find('td:nth-child(2)').text(),
-        status: $(element).find('td:nth-child(4)').text(),
-        datumLetzteMutation: $(element).find('td:nth-child(5)').text(),
-        firma: $(element).find('td:nth-child(6)').text(),
-        gtin: parseInt($(element).find('td:nth-child(7)').text()),
-        pharmacode: parseInt($(element).find('td:nth-child(8)').text()),
-        tageSeitErsterMeldung: parseInt($(element).find('td:nth-child(9)').text()),
-      };
-
-      if (!(data.firma in companyByName)) {
-        console.warn('Cannot find company', data.firma);
-      }
-      const company = companyByName[data.firma] ?? {};
-      if (!(company.Bewertung in colourByNumber)) {
-        console.warn('Cannot find colour', company.Bewertung, data.firma);
-      }
-      const colour = colourByNumber[company.Bewertung] ?? {};
-      return {
-        ...data,
-        company,
-        colorCode: colour
-      };
+  return (data.engpaesse ?? []).map((e): Drugshortage => {
+    if (!(e.firma in companyByName)) {
+      console.warn('Cannot find company', e.firma);
     }
-  );
-  return drugshortages;
-}
-
-function extractCompanyTable($: Cheerio): Company[] {
-  const rows = $('#GridView2 > tbody > tr');
-  const companies = rows
-    .toArray()
-    .slice(1) // Skip table head
-    .map((row): Company => ({
-      Bewertung: parseInt($(row).find('td:nth-child(1)').text()),
-      Firma: $(row).find('td:nth-child(2)').text(),
-      'Anzahl registrierte Produkte Total': parseInt($(row).find('td:nth-child(3)').text()),
-      'Anzahl offene Engpässe': parseInt($(row).find('td:nth-child(4)').text()),
-    })
-  );
-  return companies;
-}
-
-function extractColourTable($: Cheerio): Colour[] {
-  const rows = $('#GridView5 > tbody > tr');
-  const colours = rows
-    .toArray()
-    .slice(1) // Skip table head
-    .map((row): Colour => ({
-      '#': parseInt($(row).find('td:nth-child(1)').text()),
-      'Bewertung': $(row).find('td:nth-child(2)').text(),
-      'Art der Meldung': $(row).find('td:nth-child(3)').text(),
-    })
-  );
-  return colours;
+    if (!(e.bewertung in colourByNumber)) {
+      console.warn('Cannot find colour', e.bewertung, e.firma);
+    }
+    return {
+      id: e.id,
+      bezeichnung: e.bezeichnung,
+      detailsLink: DETAIL_URL + e.id,
+      gtin: parseInt(e.gtin, 10),
+      pharmacode: parseInt(e.pharmacode, 10),
+      firma: e.firma,
+      atc: e.atc,
+      datumLetzteMutation: e.mutation,
+      tageSeitErsterMeldung: e.tage,
+      status: e.status,
+      datumLieferfahigkeit: e.lieferdatum,
+      company: companyByName[e.firma] ?? {},
+      colorCode: colourByNumber[e.bewertung] ?? {},
+    };
+  });
 }

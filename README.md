@@ -27,7 +27,7 @@ node dist/index.js --swissreg
 
 ### Notes
 
-- `--drugshortage` scrapes `drugshortage.ch`. When the site is down it returns an ASP.NET "Laufzeitfehler" page instead of the data tables; in that case the scraper writes an empty `output/drugshortage.json` rather than crashing.
+- `--drugshortage` reads `https://www.drugshortage.ch/api_engpaesse.php` (JSON) and writes `output/drugshortage.json`. The old ASP.NET HTML scrape was retired when the site moved to WordPress in 2026.
 
 ### Optional
 
