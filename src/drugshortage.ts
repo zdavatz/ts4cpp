@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 import * as fs from 'fs';
 import fetch from 'node-fetch';
 
@@ -30,7 +31,8 @@ type Colour = {
   'Art der Meldung': string;
 };
 
-// Shape of https://www.drugshortage.ch/api_engpaesse.php
+// Shape of https://www.drugshortage.ch/ds.php?a=engpaesse — same payload the
+// homepage fetches client-side. Replaces the retired /api_engpaesse.php.
 type ApiResponse = {
   engpaesse: ApiEngpass[];
   firmen: ApiFirma[];
@@ -65,8 +67,21 @@ type ApiBewertung = {
 };
 
 const BASE_URL = 'https://www.drugshortage.ch';
-const API_URL = `${BASE_URL}/api_engpaesse.php`;
+const API_URL = `${BASE_URL}/ds.php?a=engpaesse`;
 const DETAIL_URL = `${BASE_URL}/index.php/detail-lieferengpass/?ID=`;
+
+// HMAC secret is embedded verbatim in the homepage JS (ds-config / inline
+// <script>). It's bot-deterrence, not auth — anyone fetching the homepage
+// gets the same value. Update if the homepage starts serving a different one.
+const HMAC_SECRET = 'N8xK3mV7qP1rT9cY5wH2zL6dF4sJ0uB8eR7nQ3kW1pX9tM5vC2yD6hG4aZ8fL1';
+
+function signHmac(apiName: string): { [k: string]: string } {
+  const timestamp = Math.floor(Date.now() / 1000).toString();
+  const nonce = Math.random().toString(36).substring(2, 15);
+  const msg = `${timestamp}|${nonce}|${apiName}`;
+  const sig = crypto.createHmac('sha256', HMAC_SECRET).update(msg).digest('hex');
+  return { 'X-Timestamp': timestamp, 'X-Nonce': nonce, 'X-Signature': sig };
+}
 
 export async function main(options: { outputPath: string }) {
   console.log('Running Drugshortage');
@@ -79,7 +94,13 @@ export async function main(options: { outputPath: string }) {
 
 export async function scrape(): Promise<Drugshortage[]> {
   console.log(`Fetching ${API_URL}`);
-  const response = await fetch(API_URL);
+  const response = await fetch(API_URL, {
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+      'User-Agent': 'ts4cpp/1.0 (+https://github.com/zdavatz/ts4cpp)',
+      ...signHmac('api_engpaesse'),
+    },
+  });
   const data = (await response.json()) as ApiResponse;
   console.log(`Fetched ${data.engpaesse?.length ?? 0} engpaesse, ${data.firmen?.length ?? 0} firmen, ${data.bewertungLegende?.length ?? 0} legend entries`);
 

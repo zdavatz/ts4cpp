@@ -27,7 +27,7 @@ node dist/index.js --swissreg
 
 ### Notes
 
-- `--drugshortage` reads `https://www.drugshortage.ch/api_engpaesse.php` (JSON) and writes `output/drugshortage.json`. The old ASP.NET HTML scrape was retired when the site moved to WordPress in 2026.
+- `--drugshortage` reads `https://www.drugshortage.ch/ds.php?a=engpaesse` (JSON, HMAC-signed — secret is from the homepage JS) and writes `output/drugshortage.json`. The old ASP.NET HTML scrape was retired when the site moved to WordPress in 2026; the short-lived `/api_engpaesse.php` was replaced by `/ds.php` shortly after.
 
 ### Optional
 

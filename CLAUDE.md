@@ -25,7 +25,7 @@ type Cheerio = ReturnType<typeof cheerioLoad>;
 
 ## Data sources & quirks
 
-- **drugshortage.ch** — site was re-platformed from ASP.NET to WordPress (mid-2026). All `.aspx` URLs are gone (HTTP 500). Data now comes from JSON endpoints, primarily `https://www.drugshortage.ch/api_engpaesse.php` (shortage list, companies, colour legend in one payload). Other endpoints exist under `/api_*.php` for related views (abgeschlossen, ausserhandel, vertriebseinstellung, suche, etc.) — see issue #19 for the full list.
+- **drugshortage.ch** — site was re-platformed from ASP.NET to WordPress (mid-2026), then the JSON endpoints were reshuffled again shortly after: `/api_engpaesse.php` is gone (404). Current source is `/ds.php?a=engpaesse` — same payload shape as before (engpaesse + firmen + bewertungLegende in one call) but now HMAC-signed. The HMAC secret is hard-coded in the homepage JS (inline `<script>` block, also referenced by `ds-config.js`); update the constant in `src/drugshortage.ts` if it ever changes. There's also a paid REST API at `/api/v1/drugshortage.php?endpoint=…` (CHF 29/mo Basic for 5000 req/day; free tier silently caps `perPage` at 11 and returns 200/empty past page 1 — not usable in practice).
 - The sister Ruby importer at `/home/zeno/.software/oddb.org/src/plugin/shortage.rb` still parses the old ASP.NET HTML and will need the same kind of rewrite.
 
 ## Conventions
