@@ -72,10 +72,14 @@ const DETAIL_URL = `${BASE_URL}/index.php/detail-lieferengpass/?ID=`;
 
 // HMAC secret is embedded verbatim in the homepage JS (ds-config / inline
 // <script>). It's bot-deterrence, not auth — anyone fetching the homepage
-// gets the same value. Update if the homepage starts serving a different one.
-const HMAC_SECRET = 'N8xK3mV7qP1rT9cY5wH2zL6dF4sJ0uB8eR7nQ3kW1pX9tM5vC2yD6hG4aZ8fL1';
+// gets the same value — but we keep it out of source. Pull it from
+// DRUGSHORTAGE_HMAC_SECRET (see .claude/settings.local.json for local dev).
+const HMAC_SECRET = process.env.DRUGSHORTAGE_HMAC_SECRET;
 
 function signHmac(apiName: string): { [k: string]: string } {
+  if (!HMAC_SECRET) {
+    throw new Error('DRUGSHORTAGE_HMAC_SECRET is not set (grab it from the inline <script> on https://www.drugshortage.ch/)');
+  }
   const timestamp = Math.floor(Date.now() / 1000).toString();
   const nonce = Math.random().toString(36).substring(2, 15);
   const msg = `${timestamp}|${nonce}|${apiName}`;
