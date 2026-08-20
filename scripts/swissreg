@@ -1,0 +1,50 @@
+#!/bin/bash
+# Generates output/swissreg.json and installs it into the cpp2sqlite input
+# directory. Made to be called from cron, where PATH is minimal (/usr/bin:/bin):
+# node comes from nvm, sourced below.
+#
+# The previous wrapper ran `node ... && cp ...` as two unchecked steps. node
+# was not on the cron PATH, so for 295 runs the cp copied the same stale
+# output/swissreg.json - refreshing its mtime daily while the content stayed
+# frozen on 2026-02-06. Hence: every step here is checked, and the copy only
+# happens for a file this run actually produced.
+
+die() { echo "ABORT: $*" 1>&2; exit 1; }
+
+REPO=$(cd "${BASH_SOURCE[0]%/*}/.." && pwd)
+DEST_DIR=${SWISSREG_DEST:-/usr/local/src/cpp2sqlite/input}
+MIN_CERTS=${SWISSREG_MIN_CERTS:-800}    # 2026-08-20: 1033
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" --no-use
+nvm use default >/dev/null 2>&1 || nvm use node >/dev/null 2>&1
+command -v node >/dev/null || die "node is not available (nvm at $NVM_DIR)"
+
+cd "$REPO" || die "cannot cd to $REPO"
+
+# A git pull without npm run build leaves dist/ running last month's code,
+# silently. Not fatal - swissreg may be unaffected by the change - but say so.
+if [ -n "$(find src -name '*.ts' -newer dist/index.js 2>/dev/null)" ] ; then
+    echo "WARNING: src/ is newer than dist/ - run 'npm run build'" 1>&2
+fi
+
+STAMP=$(mktemp "$REPO/output/.swissreg_started.XXXXXX") || die "cannot write to output/"
+trap 'rm -f "$STAMP"' EXIT
+
+node dist/index.js --swissreg || die "node dist/index.js --swissreg failed"
+
+OUT="$REPO/output/swissreg.json"
+[ "$OUT" -nt "$STAMP" ] || die "$OUT was not rewritten by this run"
+
+# Well-formed JSON with a sane number of certificates, checked with the node
+# we already have (python is not guaranteed on the cron PATH either).
+CERTS=$(node -e 'const o=require(process.argv[1]);console.log(Object.keys(o).length)' "$OUT") \
+    || die "$OUT is not valid JSON"
+[ "$CERTS" -ge "$MIN_CERTS" ] || die "$OUT has only $CERTS certificates (< $MIN_CERTS)"
+
+# Atomic install: never let a reader see a half-copied file.
+[ -d "$DEST_DIR" ] || die "$DEST_DIR does not exist"
+cp "$OUT" "$DEST_DIR/.swissreg.json.tmp" || die "cannot copy to $DEST_DIR"
+mv -f "$DEST_DIR/.swissreg.json.tmp" "$DEST_DIR/swissreg.json"
+
+echo "installed $DEST_DIR/swissreg.json ($CERTS certificates)"
